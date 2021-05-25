@@ -1,4 +1,4 @@
-# Построение RESTfull API для Yatube
+# Построение RESTful API для Yatube
 ### Стек технологий: Django, Django Rest Framework (DRF)
 
 ## Для чего этот проект?

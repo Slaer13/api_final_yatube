@@ -1,7 +1,7 @@
 from rest_framework import filters
 from rest_framework import permissions
 from django.shortcuts import get_object_or_404
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import viewsets, mixins
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Post, Group, User
@@ -11,7 +11,7 @@ from .serializers import (PostSerializer, CommentSerializer, FollowSerializer,
                           GroupSerializer)
 
 
-class PostViewSet(ModelViewSet):
+class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [
@@ -25,23 +25,17 @@ class PostViewSet(ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class GroupViewSet(ModelViewSet):
-    queryset = Group.objects.all()
-    serializer_class = GroupSerializer
-    http_method_names = ['get', 'post']
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly
-    ]
+class BaseCreateListViewSet(viewsets.ModelViewSet, mixins.CreateModelMixin,
+                            mixins.ListModelMixin):
+    pass
 
 
-class FollowViewSet(ModelViewSet):
+class FollowViewSet(BaseCreateListViewSet):
     serializer_class = FollowSerializer
-    http_method_names = ['get', 'post']
     filter_backends = [filters.SearchFilter]
     search_fields = ['user__username', 'following__username']
-    permission_classes = [
-        permissions.IsAuthenticated,
-    ]
+    filterset_fields = ['user']
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = get_object_or_404(User, username=self.request.user)
@@ -51,7 +45,17 @@ class FollowViewSet(ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class CommentViewSet(ModelViewSet):
+class GroupViewSet(BaseCreateListViewSet):
+    serializer_class = GroupSerializer
+    permission_classes = [
+        permissions.IsAuthenticatedOrReadOnly
+    ]
+
+    def get_queryset(self):
+        return Group.objects.all()
+
+
+class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [
         permissions.IsAuthenticatedOrReadOnly,
