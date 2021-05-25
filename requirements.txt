@@ -4,4 +4,3 @@ pytest
 pytest-django
 djangorestframework
 djangorestframework-simplejwt
-django-filter
